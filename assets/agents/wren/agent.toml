@@ -1,0 +1,18 @@
+# Mail agent from screen 3. Wakes on a schedule and raises a letter
+# when it finds important mail. The real interval would be "5m". The
+# demo uses 40 seconds so you see it without waiting.
+name = "Wren"
+color = "#D9A441"
+home = "window"
+
+[runtime]
+kind = "mock"
+
+[[schedule]]
+every = "40s"
+task = "Check the inbox. If a mail is important, switch letter on and tell me why."
+station = "mailbox"
+quiet_hours = "22:00-07:00"
+
+[capabilities]
+granted = ["mail.read"]

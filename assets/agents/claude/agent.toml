@@ -1,0 +1,7 @@
+# Placeholder figure, not the Anthropic logo.
+name = "Claude"
+color = "#B7A6FF"
+home = "bookshelf"
+
+[runtime]
+kind = "mock"

@@ -1,0 +1,13 @@
+[package]
+name = "meerora-protocol"
+description = "Messages between the meerora agent daemon and the app, and the agent.toml format"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+libc.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true

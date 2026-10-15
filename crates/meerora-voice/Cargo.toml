@@ -1,0 +1,22 @@
+[package]
+name = "meerora-voice"
+description = "Local voice for meerora: speech to text with whisper.cpp, text to speech with Piper (D16)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+flate2 = "1"
+libc.workspace = true
+pulldown-cmark.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tar = "0.4"
+thiserror.workspace = true
+toml.workspace = true
+tracing.workspace = true
+ureq.workspace = true
+# Builds whisper.cpp from source with cmake (bundled in whisper-rs-sys).
+whisper-rs = { version = "0.16", features = ["tracing_backend"] }

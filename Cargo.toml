@@ -1,0 +1,61 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+default-members = ["crates/meerora", "crates/meerora-agentd", "crates/meerora-mcp", "crates/meerora-index"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "AGPL-3.0-or-later"
+
+[workspace.dependencies]
+meerora-geom = { path = "crates/meerora-geom" }
+meerora-script = { path = "crates/meerora-script" }
+meerora-scene = { path = "crates/meerora-scene" }
+meerora-protocol = { path = "crates/meerora-protocol" }
+meerora-term = { path = "crates/meerora-term" }
+meerora-runtime = { path = "crates/meerora-runtime" }
+meerora-index = { path = "crates/meerora-index" }
+meerora-browser = { path = "crates/meerora-browser" }
+meerora-compositor = { path = "crates/meerora-compositor" }
+meerora-voice = { path = "crates/meerora-voice" }
+
+anyhow = "1"
+base64 = "0.22"
+bytemuck = { version = "1", features = ["derive"] }
+egui = "0.36"
+egui-wgpu = "0.36"
+egui-winit = "0.36"
+glam = { version = "0.34", features = ["bytemuck"] }
+httparse = "1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp"] }
+jiff = "0.2"
+libc = "0.2"
+notify = "8"
+pollster = "1"
+pulldown-cmark = { version = "0.13", default-features = false }
+alacritty_terminal = "0.26"
+rquickjs = "0.14"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+smithay = { version = "0.7", default-features = false, features = ["wayland_frontend", "desktop"] }
+similar = "3"
+thiserror = "2"
+toml = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
+ureq = { version = "3", features = ["json"] }
+wayland-backend = "0.3"
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["client", "unstable"] }
+wgpu = "30"
+winit = "0.30"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3

@@ -1,0 +1,383 @@
+#!/usr/bin/env bash
+# meerora-session starts meerora as a login session (D14, D15).
+#
+# The display manager (SDDM) runs this script for the meerora entry in
+# /usr/share/wayland-sessions. It prepares the session environment and runs
+# the cage kiosk compositor with meerora as its only app. When meerora quits,
+# cage quits, this script cleans up and the login screen comes back.
+#
+# Usage:
+#   meerora-session            the login session, as the display manager starts it
+#   meerora-session --nested   the same session in a window of a running desktop
+#
+# Inside cage the script runs itself again with --inside-cage. Only that step
+# knows cage's WAYLAND_DISPLAY, so it hands the environment to systemd and
+# D-Bus, starts the helpers and then runs meerora --session.
+#
+# These variables override what the script looks for, mainly for tests:
+#   MEERORA_APP           the meerora binary, by default next to this script, else on PATH
+#   MEERORA_AGENTD        the meerora-agentd binary, by default next to this script, else on PATH
+#   MEERORA_CAGE          the cage binary, by default cage on PATH
+#   MEERORA_POLKIT_AGENT  the polkit agent to start, or none
+#   MEERORA_PORTAL        xdg-desktop-portal, started directly without a systemd user session
+
+set -u
+
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+here="$(dirname "$self")"
+
+# The variables that describe the session to apps that D-Bus or systemd start.
+# The first six are removed from systemd again when the session ends.
+SESSION_VARS=(WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE DESKTOP_SESSION)
+HINT_VARS=(QT_QPA_PLATFORM MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT _JAVA_AWT_WM_NONREPARENTING)
+
+say() {
+    printf 'meerora-session: %s\n' "$*" >&2
+}
+
+usage() {
+    cat <<'EOF'
+meerora-session            Start meerora as the login session inside cage. The display manager runs this.
+meerora-session --nested   Start the same session in a window of the desktop that runs now, to try it.
+
+To try meerora itself in a window, run meerora --windowed instead.
+EOF
+}
+
+# Prints the path of a binary next to this script, else on PATH.
+find_bin() {
+    if [ -x "$here/$1" ]; then
+        printf '%s\n' "$here/$1"
+    else
+        command -v "$1" 2>/dev/null
+    fi
+}
+
+# The pattern for pgrep -f that matches a program by the name of its binary.
+program_pattern() {
+    printf '^([^ ]*/)?%s( |$)' "$1"
+}
+
+# True when a program of this name runs for this user.
+running_for_user() {
+    pgrep -u "$(id -u)" -f -- "$(program_pattern "$1")" >/dev/null 2>&1
+}
+
+# True when a program of this name runs in this login session. A polkit agent
+# of another session, for example a KDE session next to this one, does not count.
+running_in_session() {
+    local own pid
+    own="$(cat /proc/self/sessionid 2>/dev/null)"
+    for pid in $(pgrep -u "$(id -u)" -f -- "$(program_pattern "$1")" 2>/dev/null); do
+        if [ "$(cat "/proc/$pid/sessionid" 2>/dev/null)" = "$own" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# True when a Wayland compositor listens on this display name or path.
+is_live_display() {
+    case "$1" in
+        /*) [ -S "$1" ] ;;
+        *) [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -S "$XDG_RUNTIME_DIR/$1" ] ;;
+    esac
+}
+
+# Takes the keyboard layout of the system for cage, unless XKB_DEFAULT_LAYOUT is set.
+keyboard_from_system() {
+    local status value field name
+    if [ -n "${XKB_DEFAULT_LAYOUT:-}" ] || ! command -v localectl >/dev/null 2>&1; then
+        return 0
+    fi
+    status="$(localectl status 2>/dev/null)" || return 0
+    for field in Layout Variant Options Model; do
+        value="$(printf '%s\n' "$status" | sed -n "s/^ *X11 $field: *//p" | head -n 1)"
+        if [ -n "$value" ]; then
+            name="XKB_DEFAULT_$(printf '%s' "$field" | tr '[:lower:]' '[:upper:]')"
+            export "$name=$value"
+            say "The keyboard uses $name=$value from localectl."
+        fi
+    done
+}
+
+# Makes sure a session bus exists. Without one, the script runs itself again under dbus-run-session.
+ensure_session_bus() {
+    if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+        return 0
+    fi
+    if [ -S "$XDG_RUNTIME_DIR/bus" ]; then
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+        say "Using the session bus at $XDG_RUNTIME_DIR/bus."
+        return 0
+    fi
+    if [ -z "${MEERORA_SESSION_DBUS:-}" ] && command -v dbus-run-session >/dev/null 2>&1; then
+        say "There is no session bus, so meerora-session starts one with dbus-run-session."
+        export MEERORA_SESSION_DBUS=1
+        exec dbus-run-session -- "$self" "$@"
+    fi
+    say "There is no session bus. Portals and the polkit agent will not work."
+}
+
+# Creates the user's data directory on the first start. The shipped assets
+# are read-only, and meerora writes layouts, grants and browser profiles.
+ensure_data_dir() {
+    local data_dir agentd
+    data_dir="${MEERORA_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/meerora}"
+    if [ -e "$data_dir" ]; then
+        return 0
+    fi
+    agentd="${MEERORA_AGENTD:-$(find_bin meerora-agentd)}"
+    if [ -z "$agentd" ]; then
+        say "There is no $data_dir and no meerora-agentd to create it, so meerora uses the shipped assets."
+        return 0
+    fi
+    say "This is the first start, so meerora-agentd init creates $data_dir."
+    if ! "$agentd" init --data-dir "$data_dir"; then
+        say "meerora-agentd init failed, so meerora uses the shipped assets."
+    fi
+}
+
+# Waits for a background process and returns its exit status. A trapped
+# signal interrupts wait, so it waits again until the process is gone.
+wait_for() {
+    local pid="$1" status=0
+    wait "$pid"
+    status=$?
+    while kill -0 "$pid" 2>/dev/null; do
+        wait "$pid"
+        status=$?
+    done
+    return "$status"
+}
+
+# The login session itself. $1 is 1 for --nested.
+outer() {
+    local nested="$1" have_systemd=0 cage status
+    shift
+
+    if [ "$nested" = 0 ] && [ -n "${WAYLAND_DISPLAY:-}" ] && is_live_display "$WAYLAND_DISPLAY"; then
+        say "A desktop already runs here on $WAYLAND_DISPLAY, so meerora-session does not start a second session."
+        say "Run meerora --windowed to try meerora in a window, or meerora-session --nested to try the whole session in a window."
+        return 2
+    fi
+
+    export XDG_CURRENT_DESKTOP=meerora XDG_SESSION_DESKTOP=meerora DESKTOP_SESSION=meerora
+    export XDG_SESSION_TYPE=wayland
+    export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland;xcb}"
+    export MOZ_ENABLE_WAYLAND="${MOZ_ENABLE_WAYLAND:-1}"
+    export ELECTRON_OZONE_PLATFORM_HINT="${ELECTRON_OZONE_PLATFORM_HINT:-auto}"
+    export _JAVA_AWT_WM_NONREPARENTING="${_JAVA_AWT_WM_NONREPARENTING:-1}"
+    # The installed prefix holds the portal configuration for this desktop.
+    local share
+    share="$(dirname "$here")/share"
+    case ":${XDG_DATA_DIRS:=/usr/local/share:/usr/share}:" in
+        *":$share:"*) ;;
+        *) export XDG_DATA_DIRS="$share:$XDG_DATA_DIRS" ;;
+    esac
+
+    if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+        if [ -d "/run/user/$(id -u)" ]; then
+            XDG_RUNTIME_DIR="/run/user/$(id -u)"
+            export XDG_RUNTIME_DIR
+        else
+            say "XDG_RUNTIME_DIR is not set and /run/user/$(id -u) does not exist, so cage cannot start."
+            return 1
+        fi
+    fi
+    keyboard_from_system
+
+    if [ "$nested" = 0 ]; then
+        ensure_session_bus "$@"
+        if command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >/dev/null 2>&1; then
+            have_systemd=1
+        else
+            say "There is no systemd user session, so meerora-session starts the helpers itself."
+        fi
+    fi
+    export MEERORA_SESSION_NESTED="$nested" MEERORA_SESSION_SYSTEMD="$have_systemd"
+
+    ensure_data_dir
+
+    cage="${MEERORA_CAGE:-cage}"
+    if ! command -v "$cage" >/dev/null 2>&1; then
+        say "cage is not installed, so the session cannot start. Install it with sudo dnf install cage."
+        return 1
+    fi
+
+    if [ "$nested" = 0 ]; then
+        # wlroots picks its backend from these. Without them cage drives the screen itself.
+        unset WAYLAND_DISPLAY DISPLAY
+        say "Starting cage with meerora on this screen."
+    else
+        say "Starting cage with meerora in a window of the running desktop."
+    fi
+    # VT switching (-s) keeps Ctrl+Alt+F1 and the other consoles reachable.
+    "$cage" -s -- "$self" --inside-cage <&0 &
+    local cage_pid=$!
+    trap 'kill -TERM "$cage_pid" 2>/dev/null' TERM INT HUP
+    wait_for "$cage_pid"
+    status=$?
+    trap - TERM INT HUP
+
+    if [ "$have_systemd" = 1 ]; then
+        systemctl --user stop meerora-session.target >/dev/null 2>&1
+        systemctl --user unset-environment "${SESSION_VARS[@]}" >/dev/null 2>&1
+    fi
+    say "meerora ended with status $status, so the session ends."
+    return "$status"
+}
+
+# Hands the session variables to D-Bus and systemd, so apps they start find this session.
+import_environment() {
+    local vars=() v
+    for v in "${SESSION_VARS[@]}" "${HINT_VARS[@]}"; do
+        if [ -n "${!v:-}" ]; then
+            vars+=("$v")
+        fi
+    done
+    if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+        if [ "$MEERORA_SESSION_SYSTEMD" = 1 ]; then
+            dbus-update-activation-environment --systemd "${vars[@]}"
+        else
+            dbus-update-activation-environment "${vars[@]}"
+        fi
+    elif [ "$MEERORA_SESSION_SYSTEMD" = 1 ]; then
+        systemctl --user import-environment "${vars[@]}"
+    fi
+    say "Handed ${vars[*]} to D-Bus and systemd."
+}
+
+# Starts a helper program unless it already runs for this user.
+start_direct() {
+    local bin
+    if ! bin="$(command -v "$1" 2>/dev/null)"; then
+        say "$1 is not installed, so it does not run in this session."
+        return 0
+    fi
+    if running_for_user "$(basename "$bin")"; then
+        say "$(basename "$bin") already runs."
+        return 0
+    fi
+    "$bin" &
+    helpers+=("$!")
+    say "Started $bin."
+}
+
+# PipeWire, the portal, the session target and the polkit agent.
+start_helpers() {
+    local unit agent
+    if [ "$MEERORA_SESSION_SYSTEMD" = 1 ]; then
+        if systemctl --user start meerora-session.target >/dev/null 2>&1; then
+            say "Started meerora-session.target, which brings up graphical-session.target."
+        else
+            say "meerora-session.target is not installed, so services of graphical-session.target stay down."
+        fi
+        for unit in pipewire.service wireplumber.service pipewire-pulse.service xdg-desktop-portal.service; do
+            if systemctl --user is-active --quiet "$unit"; then
+                say "$unit already runs."
+            elif systemctl --user start "$unit" >/dev/null 2>&1; then
+                say "Started $unit."
+            else
+                say "Could not start $unit."
+            fi
+        done
+    else
+        start_direct pipewire
+        start_direct wireplumber
+        start_direct pipewire-pulse
+        start_direct "${MEERORA_PORTAL:-/usr/libexec/xdg-desktop-portal}"
+    fi
+
+    agent="${MEERORA_POLKIT_AGENT:-}"
+    if [ -z "$agent" ]; then
+        for candidate in /usr/libexec/kf6/polkit-kde-authentication-agent-1 /usr/libexec/polkit-kde-authentication-agent-1 \
+            /usr/libexec/polkit-gnome-authentication-agent-1; do
+            if [ -x "$candidate" ]; then
+                agent="$candidate"
+                break
+            fi
+        done
+    fi
+    if [ -z "$agent" ] || [ "$agent" = none ]; then
+        say "There is no polkit agent, so apps cannot ask for your password."
+    elif running_in_session "$(basename "$agent")"; then
+        say "The polkit agent already runs in this session."
+    else
+        "$agent" &
+        helpers+=("$!")
+        say "Started the polkit agent $agent."
+    fi
+}
+
+# Stops the helpers this script started, at most three seconds after asking.
+stop_helpers() {
+    local pid
+    if [ "${#helpers[@]}" -eq 0 ]; then
+        return 0
+    fi
+    kill -TERM "${helpers[@]}" 2>/dev/null
+    for _ in $(seq 30); do
+        local alive=0
+        for pid in "${helpers[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                alive=1
+            fi
+        done
+        if [ "$alive" = 0 ]; then
+            return 0
+        fi
+        sleep 0.1
+    done
+    say "Helpers did not stop within three seconds, so they are killed."
+    kill -KILL "${helpers[@]}" 2>/dev/null
+}
+
+# The step inside cage hands over the environment, starts the helpers and then runs meerora.
+inner() {
+    local app status
+    helpers=()
+    if [ "${MEERORA_SESSION_NESTED:-0}" != 1 ]; then
+        import_environment
+        start_helpers
+    fi
+    app="${MEERORA_APP:-$(find_bin meerora)}"
+    if [ -z "$app" ]; then
+        say "meerora is neither next to $self nor on PATH."
+        stop_helpers
+        return 1
+    fi
+    say "Starting $app --session."
+    "$app" --session <&0 &
+    local app_pid=$!
+    trap 'kill -TERM "$app_pid" 2>/dev/null' TERM INT HUP
+    wait_for "$app_pid"
+    status=$?
+    trap - TERM INT HUP
+    stop_helpers
+    return "$status"
+}
+
+case "${1:-}" in
+    --inside-cage)
+        inner
+        exit $?
+        ;;
+    --nested)
+        outer 1 "$@"
+        exit $?
+        ;;
+    "")
+        outer 0 "$@"
+        exit $?
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        say "unknown argument $1"
+        usage >&2
+        exit 2
+        ;;
+esac

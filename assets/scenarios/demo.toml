@@ -1,0 +1,243 @@
+# Demo scenario of the mock agent daemon (milestone 1).
+#
+# It tells the story of screens 1 and 2 in docs/design/screens. Rivet fixes
+# the wifi, Ember runs a benchmark and asks before batches 4 and 5, Claude
+# researches, Quill finishes a draft and Moth rests until morning. Wren wakes
+# on the schedule of its agent.toml and holds up a letter on every
+# second run.
+#
+# Times are in seconds. The timeline starts again every loop_seconds. Agents
+# that need you walk to the front step by themselves in the app, so the
+# scenario only sets their ring and never sends them to front_step.
+#
+# Step fields, all optional except agent on the timeline:
+#   at        seconds from the start of the loop (or of the wake, or of the ack)
+#   agent     agent id, implied inside [runs.<agent>]
+#   go_to     a station, or home for the agent's own home station
+#   ring      working, needs_you or resting (clears the progress unless it is given)
+#   progress  0 to 1, keeps the ring state when ring is not given
+#   activity  the line under the name
+#   param     figure params, for example { letter = true }
+#   action    { tool, summary } for the action log
+#   type      text typed into the agent's terminal
+
+loop_seconds = 120
+
+# Rivet, the system agent, fixes the wifi at the router cabinet.
+
+[[step]]
+at = 0
+agent = "rivet"
+go_to = "router_cabinet"
+ring = "working"
+activity = "fixing wifi"
+
+[[step]]
+at = 12
+agent = "rivet"
+action = { tool = "terminal.run", summary = "nmcli device wifi rescan" }
+
+[[step]]
+at = 30
+agent = "rivet"
+action = { tool = "network.set", summary = "wlan0 powersave off" }
+
+[[step]]
+at = 62
+agent = "rivet"
+action = { tool = "terminal.run", summary = "ping -c 3 1.1.1.1" }
+
+[[step]]
+at = 70
+agent = "rivet"
+ring = "resting"
+activity = "wifi fixed"
+
+# Ember reruns batch 3 of a benchmark at the workbench (screen 2), then asks
+# whether to run batches 4 and 5.
+
+[[step]]
+at = 0
+agent = "ember"
+go_to = "workbench"
+ring = "working"
+progress = 0.05
+activity = "batch 3 of 5"
+
+[[step]]
+at = 4
+agent = "ember"
+action = { tool = "editor.patch", summary = "run.py +5 -1" }
+
+[[step]]
+at = 7
+agent = "ember"
+type = "make bench BATCH=3\n"
+
+[[step]]
+at = 8
+agent = "ember"
+progress = 0.15
+action = { tool = "terminal.run", summary = "make bench" }
+
+[[step]]
+at = 14
+agent = "ember"
+action = { tool = "browser.open", summary = ":8050/report" }
+
+[[step]]
+at = 16
+agent = "ember"
+progress = 0.3
+action = { tool = "browser.watch", summary = "#batch-3" }
+
+[[step]]
+at = 26
+agent = "ember"
+progress = 0.45
+
+[[step]]
+at = 34
+agent = "ember"
+progress = 0.62
+
+[[step]]
+at = 42
+agent = "ember"
+progress = 0.8
+
+[[step]]
+at = 50
+agent = "ember"
+progress = 1.0
+
+[[step]]
+at = 52
+agent = "ember"
+ring = "needs_you"
+activity = "batch 3 done, run 4 and 5?"
+
+[[step]]
+at = 92
+agent = "ember"
+ring = "working"
+progress = 0.05
+activity = "batch 4 of 5"
+
+[[step]]
+at = 94
+agent = "ember"
+type = "make bench BATCH=4\n"
+
+[[step]]
+at = 95
+agent = "ember"
+action = { tool = "terminal.run", summary = "make bench BATCH=4" }
+
+[[step]]
+at = 106
+agent = "ember"
+progress = 0.3
+
+# Claude researches at the bookshelf and briefly reads Quill's draft at the desk.
+
+[[step]]
+at = 0
+agent = "claude"
+go_to = "bookshelf"
+ring = "working"
+activity = "researching"
+
+[[step]]
+at = 10
+agent = "claude"
+action = { tool = "browser.open", summary = "arxiv.org search: embodied agents" }
+
+[[step]]
+at = 38
+agent = "claude"
+go_to = "desk"
+activity = "reading Quill's draft"
+
+[[step]]
+at = 48
+agent = "claude"
+go_to = "bookshelf"
+activity = "researching"
+
+[[step]]
+at = 75
+agent = "claude"
+action = { tool = "browser.open", summary = "doi.org lookup for 2 citations" }
+
+# Quill drafts at the desk, then needs you for the rest of the loop.
+
+[[step]]
+at = 0
+agent = "quill"
+go_to = "desk"
+ring = "working"
+activity = "drafting"
+
+[[step]]
+at = 8
+agent = "quill"
+action = { tool = "editor.patch", summary = "draft.md +42" }
+
+[[step]]
+at = 22
+agent = "quill"
+action = { tool = "editor.patch", summary = "draft.md +18 -3" }
+
+[[step]]
+at = 30
+agent = "quill"
+ring = "needs_you"
+activity = "draft ready, 2 citations unverified"
+
+# Moth rests on the garden bench until its next run.
+
+[[step]]
+at = 0
+agent = "moth"
+go_to = "garden_bench"
+ring = "resting"
+activity = "next run 07:00"
+
+# Wren wakes every 40 s, as its agent.toml says. The first check comes after
+# 8 s so you see it soon after the start. Every second run finds a letter.
+# Without an answer Wren acknowledges by itself after 25 s.
+
+[runs.wren]
+first_after = 8
+important_every = 2
+auto_ack_after = 25
+
+[[runs.wren.step]]
+at = 0
+go_to = "mailbox"
+ring = "working"
+activity = "checking mail"
+
+[[runs.wren.step]]
+at = 3
+action = { tool = "mail.read", summary = "inbox" }
+
+[[runs.wren.quiet]]
+at = 6
+ring = "resting"
+activity = "no new mail"
+go_to = "home"
+
+[[runs.wren.important]]
+at = 6
+param = { letter = true }
+ring = "needs_you"
+activity = "mail from the tax office"
+
+[[runs.wren.ack]]
+at = 0
+param = { letter = false }
+ring = "resting"
+activity = "letter handed over"
+go_to = "home"

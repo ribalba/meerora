@@ -1,0 +1,9 @@
+// The helper proposes a configuration change (config_change) that grants a capability, for `meerora snapshot --events`.
+{"type":"agent_spawned","agent":"rivet","name":"Rivet","system":true}
+{"type":"agent_spawned","agent":"claude","name":"Claude","system":false}
+{"type":"ring","agent":"rivet","state":"needs_you"}
+{"type":"activity","agent":"rivet","text":"proposes a change of claude"}
+{"type":"go_to","agent":"rivet","station":"router_cabinet"}
+{"type":"ring","agent":"claude","state":"resting"}
+{"type":"go_to","agent":"claude","station":"bookshelf"}
+{"type":"config_proposal","id":"config-1","agent":"rivet","target":"agent:claude","path":"agents/claude/agent.toml","reason":"You asked Claude to look things up on the web, and it needs the web capability for that.","diff":"--- a/agents/claude/agent.toml\n+++ b/agents/claude/agent.toml\n@@ -6,3 +6,6 @@\n [runtime]\n kind = \"claude-cli\"\n model = \"sonnet\"\n+\n+[capabilities]\n+granted = [\"web\"]\n"}

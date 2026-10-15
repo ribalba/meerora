@@ -1,0 +1,30 @@
+// The state of screen 1, for `meerora snapshot --events`. One protocol event per line.
+{"type":"agent_spawned","agent":"rivet","name":"Rivet","system":true}
+{"type":"agent_spawned","agent":"ember","name":"Ember","system":false}
+{"type":"agent_spawned","agent":"claude","name":"Claude","system":false}
+{"type":"agent_spawned","agent":"quill","name":"Quill","system":false}
+{"type":"agent_spawned","agent":"moth","name":"Moth","system":false}
+{"type":"agent_spawned","agent":"wren","name":"Wren","system":false}
+{"type":"ring","agent":"rivet","state":"working"}
+{"type":"activity","agent":"rivet","text":"fixing wifi"}
+{"type":"go_to","agent":"rivet","station":"router_cabinet"}
+{"type":"ring","agent":"ember","state":"working","progress":0.62}
+{"type":"activity","agent":"ember","text":"batch 3 of 5"}
+{"type":"go_to","agent":"ember","station":"workbench"}
+{"type":"action","agent":"ember","tool":"editor.patch","summary":"run.py +5 -1"}
+{"type":"action","agent":"ember","tool":"terminal.run","summary":"make bench"}
+{"type":"action","agent":"ember","tool":"browser.open","summary":":8050/report"}
+{"type":"action","agent":"ember","tool":"browser.watch","summary":"#batch-3"}
+{"type":"ring","agent":"claude","state":"working"}
+{"type":"activity","agent":"claude","text":"researching"}
+{"type":"go_to","agent":"claude","station":"bookshelf"}
+{"type":"ring","agent":"quill","state":"needs_you"}
+{"type":"activity","agent":"quill","text":"draft ready, 2 citations unverified"}
+{"type":"go_to","agent":"quill","station":"desk"}
+{"type":"ring","agent":"moth","state":"resting"}
+{"type":"activity","agent":"moth","text":"next run 07:00"}
+{"type":"go_to","agent":"moth","station":"garden_bench"}
+{"type":"ring","agent":"wren","state":"working"}
+{"type":"activity","agent":"wren","text":"checking mail"}
+{"type":"go_to","agent":"wren","station":"mailbox"}
+{"type":"param","agent":"wren","name":"letter","value":true}

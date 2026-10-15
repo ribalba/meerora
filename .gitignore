@@ -1,0 +1,8 @@
+/target
+/assets/browser/
+/assets/layouts.json
+/assets/space/devices/grants.toml
+/assets/spaces/*/devices/grants.toml
+/assets/spaces/*/devices/settings.toml
+__pycache__/
+docs/

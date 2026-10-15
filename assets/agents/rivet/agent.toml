@@ -1,0 +1,11 @@
+# System agent. Acts with OS privileges, so it gets the double violet ring.
+name = "Rivet"
+color = "#E9E4D8"
+home = "router_cabinet"
+
+[runtime]
+kind = "mock"
+
+[capabilities]
+system = true
+granted = ["network.airplane_mode.write"]

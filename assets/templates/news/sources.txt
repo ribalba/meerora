@@ -1,0 +1,4 @@
+# One source per line: a web address, a feed or a topic to search for.
+# Lines that start with # are comments. Change them in the feed under "News sources".
+https://news.ycombinator.com
+topic: local weather

@@ -1,0 +1,22 @@
+# The meerora website for Coolify (website/README.md).
+#
+# In Coolify: a new resource from this repository with the Docker Compose build
+# pack, Base Directory /website and Docker Compose Location /docker-compose.yml.
+# Then set the domain of the web service, for example https://meerora.com.
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    # No published ports. Coolify's proxy reaches the container on port 80.
+    expose:
+      - "80"
+    environment:
+      # Coolify fills this with a URL on the server's wildcard domain and routes it to port 80,
+      # until a domain of your own replaces it under Domains.
+      - SERVICE_URL_WEB_80
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

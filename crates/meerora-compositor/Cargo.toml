@@ -1,0 +1,20 @@
+[package]
+name = "meerora-compositor"
+description = "Nested Wayland compositor that shows real apps as tiles in an agent view (D15 phase 2)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+libc.workspace = true
+meerora-runtime.workspace = true
+# Xwayland per desktop (step B of D15 phase 2). It brings the X11 window manager and calloop.
+smithay = { workspace = true, features = ["xwayland"] }
+tracing.workspace = true
+
+[dev-dependencies]
+# Logs of the compositor in tests, with RUST_LOG.
+tracing-subscriber.workspace = true
+# A tiny X11 client for the tests, since no X11 terminal is installed everywhere.
+x11rb = "0.13"

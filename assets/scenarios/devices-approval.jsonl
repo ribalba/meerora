@@ -1,0 +1,102 @@
+// The airplane device asks for its capability (D8) on top of screen 1, for `meerora snapshot --events`.
+// Airplane mode is off and not allowed yet. One protocol event per line.
+{"type":"agent_spawned","agent":"rivet","name":"Rivet","system":true}
+{"type":"agent_spawned","agent":"ember","name":"Ember","system":false}
+{"type":"agent_spawned","agent":"claude","name":"Claude","system":false}
+{"type":"agent_spawned","agent":"quill","name":"Quill","system":false}
+{"type":"agent_spawned","agent":"moth","name":"Moth","system":false}
+{"type":"agent_spawned","agent":"wren","name":"Wren","system":false}
+{"type":"ring","agent":"rivet","state":"working"}
+{"type":"activity","agent":"rivet","text":"fixing wifi"}
+{"type":"go_to","agent":"rivet","station":"router_cabinet"}
+{"type":"ring","agent":"ember","state":"working","progress":0.62}
+{"type":"activity","agent":"ember","text":"batch 3 of 5"}
+{"type":"go_to","agent":"ember","station":"workbench"}
+{"type":"action","agent":"ember","tool":"editor.patch","summary":"run.py +5 -1"}
+{"type":"action","agent":"ember","tool":"terminal.run","summary":"make bench"}
+{"type":"action","agent":"ember","tool":"browser.open","summary":":8050/report"}
+{"type":"action","agent":"ember","tool":"browser.watch","summary":"#batch-3"}
+{"type":"ring","agent":"claude","state":"working"}
+{"type":"activity","agent":"claude","text":"researching"}
+{"type":"go_to","agent":"claude","station":"bookshelf"}
+{"type":"ring","agent":"quill","state":"needs_you"}
+{"type":"activity","agent":"quill","text":"draft ready, 2 citations unverified"}
+{"type":"go_to","agent":"quill","station":"desk"}
+{"type":"ring","agent":"moth","state":"resting"}
+{"type":"activity","agent":"moth","text":"next run 07:00"}
+{"type":"go_to","agent":"moth","station":"garden_bench"}
+{"type":"ring","agent":"wren","state":"working"}
+{"type":"activity","agent":"wren","text":"checking mail"}
+{"type":"go_to","agent":"wren","station":"mailbox"}
+{"type":"param","agent":"wren","name":"letter","value":true}
+{"type":"devices","devices":[{"id":"airplane","name":"Airplane mode","script":"spaces/workshop/devices/airplane.js","revision":"","actions":[{"id":"toggle","label":"Toggle airplane mode","capability":"network.airplane_mode.write"}],"needs":["network.airplane_mode.read","network.airplane_mode.write"],"granted":[]},{"id":"clock","name":"Clock","script":"spaces/workshop/devices/clock.js","revision":"","actions":[],"needs":[],"granted":[]},{"id":"graph","name":"System graph","script":"spaces/workshop/devices/graph.js","revision":"","actions":[],"needs":["system.cpu.read","system.disk.read","system.memory.read","system.network.read"],"granted":[]},{"id":"mailbox","name":"Mailbox","script":"spaces/workshop/devices/mailbox.js","revision":"","actions":[],"needs":[],"granted":[]},{"id":"noticeboard","name":"Noticeboard","script":"spaces/workshop/devices/noticeboard.js","revision":"","actions":[{"id":"open","label":"Open the feed","opens":"feed"}],"needs":[],"granted":[]},{"id":"tree","name":"Tree","script":"spaces/workshop/devices/tree.js","revision":"","actions":[],"needs":["system.memory.read"],"granted":[]}]}
+{"type":"device_param","device":"airplane","name":"flying","value":false}
+{"type":"device_param","device":"clock","name":"hour","value":9}
+{"type":"device_param","device":"clock","name":"minute","value":6}
+{"type":"device_param","device":"clock","name":"time","value":"09:30"}
+{"type":"device_param","device":"mailbox","name":"up","value":true}
+{"type":"device_param","device":"tree","name":"leaves","value":"full"}
+{"type":"device_param","device":"tree","name":"free","value":"58%"}
+{"type":"device_param","device":"graph","name":"metric","value":"cpu"}
+{"type":"device_param","device":"graph","name":"level","value":0.421}
+{"type":"device_param","device":"graph","name":"level","value":0.485}
+{"type":"device_param","device":"graph","name":"level","value":0.505}
+{"type":"device_param","device":"graph","name":"level","value":0.487}
+{"type":"device_param","device":"graph","name":"level","value":0.446}
+{"type":"device_param","device":"graph","name":"level","value":0.405}
+{"type":"device_param","device":"graph","name":"level","value":0.382}
+{"type":"device_param","device":"graph","name":"level","value":0.387}
+{"type":"device_param","device":"graph","name":"level","value":0.418}
+{"type":"device_param","device":"graph","name":"level","value":0.461}
+{"type":"device_param","device":"graph","name":"level","value":0.495}
+{"type":"device_param","device":"graph","name":"level","value":0.5}
+{"type":"device_param","device":"graph","name":"level","value":0.463}
+{"type":"device_param","device":"graph","name":"level","value":0.385}
+{"type":"device_param","device":"graph","name":"level","value":0.279}
+{"type":"device_param","device":"graph","name":"level","value":0.171}
+{"type":"device_param","device":"graph","name":"level","value":0.084}
+{"type":"device_param","device":"graph","name":"level","value":0.039}
+{"type":"device_param","device":"graph","name":"level","value":0.045}
+{"type":"device_param","device":"graph","name":"level","value":0.095}
+{"type":"device_param","device":"graph","name":"level","value":0.171}
+{"type":"device_param","device":"graph","name":"level","value":0.25}
+{"type":"device_param","device":"graph","name":"level","value":0.311}
+{"type":"device_param","device":"graph","name":"level","value":0.339}
+{"type":"device_param","device":"graph","name":"level","value":0.337}
+{"type":"device_param","device":"graph","name":"level","value":0.314}
+{"type":"device_param","device":"graph","name":"level","value":0.292}
+{"type":"device_param","device":"graph","name":"level","value":0.29}
+{"type":"device_param","device":"graph","name":"level","value":0.32}
+{"type":"device_param","device":"graph","name":"level","value":0.383}
+{"type":"device_param","device":"graph","name":"level","value":0.465}
+{"type":"device_param","device":"graph","name":"level","value":0.544}
+{"type":"device_param","device":"graph","name":"level","value":0.597}
+{"type":"device_param","device":"graph","name":"level","value":0.606}
+{"type":"device_param","device":"graph","name":"level","value":0.564}
+{"type":"device_param","device":"graph","name":"level","value":0.48}
+{"type":"device_param","device":"graph","name":"level","value":0.372}
+{"type":"device_param","device":"graph","name":"level","value":0.267}
+{"type":"device_param","device":"graph","name":"level","value":0.439}
+{"type":"device_param","device":"graph","name":"level","value":0.401}
+{"type":"device_param","device":"graph","name":"level","value":0.404}
+{"type":"device_param","device":"graph","name":"level","value":0.436}
+{"type":"device_param","device":"graph","name":"level","value":0.477}
+{"type":"device_param","device":"graph","name":"level","value":0.505}
+{"type":"device_param","device":"graph","name":"level","value":0.508}
+{"type":"device_param","device":"graph","name":"level","value":0.482}
+{"type":"device_param","device":"graph","name":"level","value":0.438}
+{"type":"device_param","device":"graph","name":"level","value":0.145}
+{"type":"device_param","device":"graph","name":"level","value":0.125}
+{"type":"device_param","device":"graph","name":"level","value":0.144}
+{"type":"device_param","device":"graph","name":"level","value":0.207}
+{"type":"device_param","device":"graph","name":"level","value":0.304}
+{"type":"device_param","device":"graph","name":"level","value":0.416}
+{"type":"device_param","device":"graph","name":"level","value":0.516}
+{"type":"device_param","device":"graph","name":"level","value":0.582}
+{"type":"device_param","device":"graph","name":"level","value":0.599}
+{"type":"device_param","device":"graph","name":"level","value":0.568}
+{"type":"device_param","device":"graph","name":"level","value":0.502}
+{"type":"device_param","device":"graph","name":"level","value":0.425}
+{"type":"device_param","device":"graph","name":"level","value":0.358}
+{"type":"device_param","device":"graph","name":"reading","value":"41%"}
+{"type":"device_capability_request","id":"cap-7","device":"airplane","capability":"network.airplane_mode.write","action":"Toggle airplane mode"}

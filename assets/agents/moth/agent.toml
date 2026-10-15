@@ -1,0 +1,6 @@
+name = "Moth"
+color = "#3B404C"
+home = "garden_bench"
+
+[runtime]
+kind = "mock"

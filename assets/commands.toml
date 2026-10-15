@@ -1,0 +1,42 @@
+# Your own keywords for the command box (Alt+Space).
+#
+# Each [[command]] has a keyword, a title and exactly one action. Type the
+# keyword, a space and your text. {query} stands for that text.
+#
+#   open_url = "https://...{query}"            opens in the browser of the agent you are with
+#   launch   = ["program", "arg", "{query}"]   starts a real app on that agent's desktop, without a shell
+#   say      = "message {query}"               sends a message to `agent`, or to the assistant
+#   open_app = "editor"                        opens a built-in app: chat, editor, terminal,
+#                                              browser, files, viewer, changes or activity
+#   copy     = "text {query}"                  puts the text on the clipboard
+#   notify   = "text {query}"                  shows the text as a note
+#
+# `subtitle` is an optional line under the title. meerora reads this file
+# again when it changes. Commands that compute their results are scripts in
+# the folder commands/ next to this file.
+
+[[command]]
+keyword = "w"
+title = "Search Wikipedia"
+open_url = "https://en.wikipedia.org/w/index.php?search={query}"
+
+[[command]]
+keyword = "calc"
+title = "Start the calculator"
+subtitle = "GNOME Calculator as a real app"
+launch = ["gnome-calculator"]
+
+[[command]]
+keyword = "standup"
+title = "Ask the assistant for my standup"
+say = "Write a short standup from what you know about my work. {query}"
+
+[[command]]
+keyword = "ed"
+title = "Open the editor"
+open_app = "editor"
+
+[[command]]
+keyword = "shrug"
+title = "Copy a shrug"
+copy = "¯\\_(ツ)_/¯"

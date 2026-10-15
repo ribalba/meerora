@@ -1,0 +1,6 @@
+name = "Ember"
+color = "#C7784A"
+home = "workbench"
+
+[runtime]
+kind = "mock"

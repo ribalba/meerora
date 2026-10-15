@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a139f9-e9c0-72d2-9a1f-b96f4bda82ef"}
+{"type":"turn.started"}
+{"type":"error","message":"{\"detail\":\"The 'gpt-5.1-codex-mini' model is not supported when using Codex with a ChatGPT account.\"}"}
+{"type":"turn.failed","error":{"message":"{\"detail\":\"The 'gpt-5.1-codex-mini' model is not supported when using Codex with a ChatGPT account.\"}"}}

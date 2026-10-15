@@ -1,0 +1,89 @@
+# Builds the prebuilt release that https://meerora.com/install.sh downloads
+# (website/README.md, section "Install script and releases").
+#
+# Push a tag such as v0.1.0 and this workflow builds meerora, meerora-agentd
+# and meerora-mcp on Ubuntu 24.04, packs them with scripts/package-release.sh
+# and attaches meerora-x86_64-linux.tar.gz and its .sha256 to the GitHub
+# release of the tag. It creates the release when there is none. A tag with a
+# hyphen, such as v0.2.0-rc1, becomes a pre-release, which releases/latest
+# skips. Run it by hand (workflow_dispatch) to build an existing tag again and
+# replace its tarball.
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The existing tag to build, for example v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  linux-x86_64:
+    # The Ubuntu of the build decides the oldest glibc the binaries run on.
+    # 24.04 has glibc 2.39, which current Fedora, Ubuntu and Debian have too.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      RUST_VERSION: "1.98.1"
+      ASSET: meerora-x86_64-linux.tar.gz
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          persist-credentials: false
+
+      - name: Install the build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config cmake clang libclang-dev libxkbcommon-dev libwayland-dev
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal
+          rustup default "$RUST_VERSION"
+          cargo --version
+
+      # package-release.sh builds whisper.cpp with GGML_NATIVE=OFF, so the
+      # binary does not depend on the CPU of the build machine.
+      - name: Build and pack
+        run: scripts/package-release.sh --out dist --version "$TAG"
+
+      - name: Show the linked libraries and the newest glibc symbol
+        run: |
+          mkdir -p "$RUNNER_TEMP/unpacked"
+          tar -xzf "dist/$ASSET" -C "$RUNNER_TEMP/unpacked"
+          for b in meerora meerora-agentd meerora-mcp; do
+            echo "$b:"
+            readelf -d "$RUNNER_TEMP/unpacked/meerora-x86_64-linux/bin/$b" | grep NEEDED
+            objdump -T "$RUNNER_TEMP/unpacked/meerora-x86_64-linux/bin/$b" | grep -o 'GLIBC_[0-9.]*' | sort -V | tail -n 1
+          done
+          cat "dist/$ASSET.sha256"
+
+      - name: Attach the tarball to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "dist/$ASSET" "dist/$ASSET.sha256" --clobber
+          else
+            set -- --verify-tag --title "meerora $TAG" --generate-notes
+            case "$TAG" in
+              *-*) set -- "$@" --prerelease ;;
+            esac
+            gh release create "$TAG" "$@" "dist/$ASSET" "dist/$ASSET.sha256"
+          fi

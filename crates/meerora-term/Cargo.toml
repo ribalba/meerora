@@ -1,0 +1,11 @@
+[package]
+name = "meerora-term"
+description = "PTY and terminal state for the meerora terminal tile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+alacritty_terminal.workspace = true
+anyhow.workspace = true

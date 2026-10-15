@@ -1,0 +1,18 @@
+[package]
+name = "meerora-script"
+description = "Sandboxed JavaScript construction scripts for meerora figures and spaces"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+meerora-geom.workspace = true
+rquickjs.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[[bin]]
+name = "figure-check"
+path = "src/bin/figure-check.rs"
