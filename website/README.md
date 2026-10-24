@@ -1,6 +1,7 @@
 # meerora.com
 
-The website of meerora: one static page with the demo video in the middle,
+The website of meerora: one static page with the demo video right under the
+headline and the idea explained in text and screenshots below it,
 served by nginx in a container. It sets no cookies and loads nothing from
 other servers. Fonts, video and pictures are served from the container.
 

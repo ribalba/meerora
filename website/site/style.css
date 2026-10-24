@@ -169,7 +169,7 @@ nav .pill:hover {
   z-index: -1;
   left: 50%;
   top: -120px;
-  width: min(900px, 120vw);
+  width: min(900px, 100vw);
   height: 620px;
   transform: translateX(-50%);
   background: radial-gradient(closest-side, rgba(218, 105, 45, 0.22), rgba(218, 105, 45, 0) 70%),
@@ -276,41 +276,8 @@ nav .pill:hover {
   color: var(--text-2);
 }
 
-.transcript {
-  max-width: 760px;
-  margin: 28px auto 0;
-  color: var(--text-2);
-  font-size: 16px;
-}
-.transcript summary {
-  cursor: pointer;
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 14px;
-  color: var(--text-2);
-  list-style: none;
-}
-.transcript summary::-webkit-details-marker {
-  display: none;
-}
-.transcript summary::after {
-  content: " +";
-}
-.transcript[open] summary::after {
-  content: " −";
-}
-.transcript summary:hover {
-  color: var(--text);
-}
-.transcript p {
-  margin: 14px 0 0;
-}
-
 /* Features */
 
-.features {
-  padding-top: 96px;
-}
 .row {
   display: grid;
   grid-template-columns: 1.35fr 1fr;
@@ -542,6 +509,326 @@ summary:focus-visible {
   border-radius: 4px;
 }
 
+/* Shared section heads */
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--orange-soft);
+  margin: 0 0 18px;
+}
+.idea > h2,
+.screens > h2,
+.loop > h2,
+.more > h2,
+.others > h2,
+.anatomy h2 {
+  font-size: clamp(32px, 4vw, 46px);
+}
+.idea > h2,
+.screens > h2,
+.loop > h2,
+.more > h2,
+.others > h2 {
+  text-align: center;
+}
+.section-lede {
+  max-width: 720px;
+  margin: 18px auto 0;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.lede strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.hero-actions {
+  margin-top: 32px;
+}
+figcaption {
+  margin: 14px auto 0;
+  max-width: 760px;
+  font-size: 15px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+/* The idea: two desktop models side by side */
+
+.idea {
+  padding-top: 112px;
+}
+.compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 56px;
+}
+.model {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+.model.ours {
+  border-color: rgba(218, 105, 45, 0.55);
+  box-shadow: 0 30px 90px -50px rgba(218, 105, 45, 0.6);
+}
+.model h3 {
+  font-size: 24px;
+}
+.model.ours h3 {
+  color: var(--orange);
+}
+.tree {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.node {
+  font-family: var(--mono);
+  font-size: 14px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 8px 14px;
+  text-align: center;
+  line-height: 1.3;
+}
+.node span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+.node.root {
+  color: var(--text);
+  padding: 8px 28px;
+}
+.children {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 30px;
+  padding-top: 0;
+}
+.children::before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  height: 16px;
+  border-left: 1px solid var(--text-3);
+}
+.children::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 12%;
+  right: 12%;
+  height: 14px;
+  border: 1px solid var(--text-3);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+}
+.children .node {
+  color: var(--text-2);
+  padding: 8px 4px;
+}
+.node.agent-dim {
+  border-style: dashed;
+  border-color: var(--violet);
+  color: var(--violet);
+}
+.node.agent {
+  border-color: var(--orange);
+  color: var(--text);
+  background: rgba(218, 105, 45, 0.1);
+}
+.facts {
+  margin: 28px 0 0;
+  padding: 0 0 0 20px;
+  color: var(--text-2);
+  font-size: 17px;
+}
+.facts li {
+  margin-top: 8px;
+}
+.facts li::marker {
+  color: var(--text-3);
+}
+.ours .facts li::marker {
+  color: var(--orange);
+}
+
+/* Anatomy of an agent */
+
+.anatomy {
+  padding-top: 112px;
+}
+.anatomy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: center;
+}
+.anatomy-grid > * {
+  min-width: 0;
+}
+.anatomy .copy > p {
+  color: var(--text-2);
+  margin: 18px 0 0;
+}
+.parts {
+  margin: 28px 0 0;
+}
+.parts div {
+  border-top: 1px solid var(--border);
+  padding: 14px 0;
+}
+.parts dt {
+  font-weight: 600;
+}
+.parts dd {
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-size: 16px;
+}
+.code-card {
+  background: #07090d;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.code-head {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+.code-card pre {
+  margin: 0;
+  padding: 22px 20px 26px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.code-card .c {
+  color: var(--text-3);
+}
+.code-card .s {
+  color: var(--orange-soft);
+}
+
+/* Agents from others */
+
+.others {
+  padding-top: 112px;
+}
+.others .row {
+  margin-top: 56px;
+  margin-bottom: 0;
+}
+.others .parts {
+  margin: 0;
+}
+
+/* The two screens */
+
+.screens {
+  padding-top: 112px;
+}
+.screens .row {
+  margin-top: 64px;
+  margin-bottom: 0;
+}
+.row h3 {
+  font-size: clamp(26px, 3vw, 34px);
+  color: var(--orange);
+}
+
+/* The task loop */
+
+.loop {
+  padding-top: 112px;
+  padding-bottom: 112px;
+}
+.steps {
+  list-style: none;
+  margin: 56px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+}
+.steps li {
+  border-top: 2px solid var(--border);
+  padding-top: 20px;
+}
+.step-n {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+.steps h3 {
+  font-size: 21px;
+  margin-top: 14px;
+}
+.steps p {
+  margin: 8px 0 0;
+  color: var(--text-2);
+  font-size: 16px;
+}
+.steps code,
+.parts code {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 56px;
+}
+.pair figure {
+  margin: 0;
+}
+.pair img {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+/* More */
+
+.more {
+  padding-top: 112px;
+}
+.more .grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 56px;
+}
+
 /* Narrow screens */
 
 @media (max-width: 900px) {
@@ -553,8 +840,25 @@ summary:focus-visible {
   .row.flip .shot {
     order: 0;
   }
-  .trust-grid {
+  .trust-grid,
+  .steps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .compare,
+  .anatomy-grid,
+  .pair,
+  .more .grid {
+    grid-template-columns: 1fr;
+  }
+  nav {
+    gap: 20px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 800px) {
+  nav a:not(.pill) {
+    display: none;
   }
 }
 
@@ -568,9 +872,6 @@ summary:focus-visible {
   nav {
     gap: 18px;
     font-size: 15px;
-  }
-  nav a:not(.pill) {
-    display: none;
   }
   .hero {
     padding-top: 64px;
@@ -598,13 +899,33 @@ summary:focus-visible {
   .play-meta {
     font-size: 11px;
   }
-  .features {
-    padding-top: 64px;
-  }
   .grid {
     grid-template-columns: 1fr;
     gap: 20px;
     margin-bottom: 80px;
+  }
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  .model {
+    padding: 22px 16px;
+  }
+  .node {
+    font-size: 12px;
+  }
+  .idea,
+  .anatomy,
+  .others,
+  .screens,
+  .more {
+    padding-top: 80px;
+  }
+  .loop {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+  .code-card pre {
+    font-size: 13px;
   }
   .trust {
     padding: 64px 0;
